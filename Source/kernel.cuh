@@ -12,11 +12,11 @@
 // Select the device to run on
 // __global__ void cudaSelectDevice(int device);
 
-cudaTextureObject_t texConstSrc, texIn, texOut;
+__host__ void selectDevice(int device);
 
 
-__global__ void update_kernel(float* dst, bool dstOut);
-
+__global__ void copy_heaters_kernel(float* iptr, const float* cptr);
+__global__ void update_kernel(float* outSrc, const float* inSrc);
 
 
 

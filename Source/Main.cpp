@@ -5,13 +5,9 @@
 #include <GLFW/glfw3.h>
 
 #include "kernel.cuh"
-#include "gpu_anim_bitmap.h"
 #include "handle_error.h"
 #include "config.h"
 
-
-
-void selectDevice(int device);
 
 
 int main()
@@ -82,39 +78,5 @@ int main()
 }
 
 
-// Select CUDA device
-void selectDevice(int device) {
-
-	// List all devices
-	int deviceCount;
-	cudaGetDeviceCount(&deviceCount);
-
-	// Print all devices
-	for (int i = 0; i < deviceCount; i++) {
-		cudaDeviceProp deviceProp;
-		cudaGetDeviceProperties(&deviceProp, i);
-		std::cout << "Device " << i << ": " << deviceProp.name << std::endl;
-	}
-
-	// Set the device
-	cudaSetDevice(device);
-
-	// Print device info
-	cudaDeviceProp deviceProp;
-	cudaGetDeviceProperties(&deviceProp, device);
-	printf("Selected device: %s\n", deviceProp.name);
-	printf("Compute capability: %d.%d\n", deviceProp.major, deviceProp.minor);
-	printf("Total global memory: %lu\n", deviceProp.totalGlobalMem);
-	printf("Shared memory per block: %lu\n", deviceProp.sharedMemPerBlock);
-	printf("Registers per block: %d\n", deviceProp.regsPerBlock);
-	printf("Warp size: %d\n", deviceProp.warpSize);
-	printf("Max threads per block: %d\n", deviceProp.maxThreadsPerBlock);
-	printf("Max threads dimensions: %d, %d, %d\n", deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
-	printf("Max grid size: %d, %d, %d\n", deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
-	printf("Clock rate: %d\n", deviceProp.clockRate);
-	printf("Total constant memory: %lu\n", deviceProp.totalConstMem);
-	printf("Device Overlap: %s\n", deviceProp.deviceOverlap ? "Supported":"Not available");
-	printf("Integrated: %s\n", deviceProp.integrated ? "Yes" : "No");
-}
 
 
