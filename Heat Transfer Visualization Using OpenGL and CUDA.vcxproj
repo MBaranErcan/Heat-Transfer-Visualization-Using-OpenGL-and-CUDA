@@ -85,12 +85,16 @@
     <ClCompile Include="Source\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\config.h" />
+    <ClInclude Include="Source\graphics.h" />
     <ClInclude Include="Source\handle_error.h" />
     <ClInclude Include="Source\kernel.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Source\kernel.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\shader.frag" />
+    <None Include="Shaders\shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,5 +1,4 @@
-#ifndef __HANDLE_ERROR__
-#define __HANDLE_ERROR__
+#pragma once
 
 #include <cuda_runtime.h>
 
@@ -7,10 +6,7 @@
 #include <stdlib.h>
 
 // Handle CUDA errors
-static void HandleError(cudaError_t err,
-						const char* file,
-						int line) {
-
+static void HandleError(cudaError_t err, const char* file, int line) {
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), file, line);
 		exit(EXIT_FAILURE);
@@ -22,6 +18,3 @@ static void HandleError(cudaError_t err,
 #define HANDLE_NULL(a) {if (a == nullptr) {\
 	printf("Host memory failed in %s at line %d\n", __FILE__, __LINE__); \
 	exit(EXIT_FAILURE); } }
-
-
-#endif // !__HANDLE_ERROR__
