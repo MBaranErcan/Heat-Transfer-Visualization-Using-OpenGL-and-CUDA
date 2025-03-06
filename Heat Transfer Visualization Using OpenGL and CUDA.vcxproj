@@ -49,7 +49,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\KHR\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glad\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\KHR\include;$(SolutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -83,18 +83,20 @@
   <ItemGroup>
     <ClCompile Include="Dependencies\glad\lib\glad\glad.c" />
     <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\graphics.h" />
+    <ClInclude Include="Source\Graphics.h" />
     <ClInclude Include="Source\handle_error.h" />
-    <ClInclude Include="Source\kernel.cuh" />
+    <ClInclude Include="Source\Kernel.cuh" />
+    <ClInclude Include="Source\Shader.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="Source\kernel.cu" />
+    <CudaCompile Include="Source\Kernel.cu" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\shader.frag" />
-    <None Include="Shaders\shader.vert" />
+    <None Include="Shaders\Shader.frag" />
+    <None Include="Shaders\Shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

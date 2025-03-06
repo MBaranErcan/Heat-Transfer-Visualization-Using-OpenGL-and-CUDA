@@ -35,7 +35,7 @@ struct Heater {
 
 __host__ void init_anim(DataBlock* data, int size);
 __host__ void selectDevice(int device);
-__host__ void animate(DataBlock* data, float* outSrc, dim3 threads, dim3 blocks, float SPEED, int DIM);
+__host__ void animate(DataBlock* data, dim3 threads, dim3 blocks, float SPEED, int DIM);
 __host__ void initConstantRegion(DataBlock* data, float min, float max, int DIM, int heater_x, int heater_y, int radius);
 __host__ void anim_exit(DataBlock* data);
 

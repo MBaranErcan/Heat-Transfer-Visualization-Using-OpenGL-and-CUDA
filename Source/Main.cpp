@@ -6,8 +6,9 @@
 #include <windows.h>
 
 
-#include "kernel.cuh"
-#include "graphics.h"
+#include "Kernel.cuh"
+#include "Graphics.h"
+#include "Shader.h"
 #include "handle_error.h"
 
 int imin(int a, int b) {
@@ -57,37 +58,57 @@ int main()
 	glViewport(0, 0, DIM, DIM);
 	glClearColor(0.5f, 0.6, 0.8f, 1.0f);
 
-	// Select CUDA device
-	selectDevice(0);
+	// Create shader program
+	Shader shader("Shaders/Shader.vert", "Shaders/Shader.frag");
+	shader.use();
+	shader.setInt("heatmap", 0); // Set the texture uniform
 
-	// Create OpenGL texture
+	// Create quad
+	unsigned int VAO, VBO, EBO;
+	createQuad(&VAO, &VBO, &EBO);
+
+	// Create OpenGL PBO
 	GLuint pbo;
 	createPBO(&pbo, DIM);
+
+	// Select CUDA device
+	selectDevice(0);
 
 	// Register PBO with CUDA
 	DataBlock data;
 	HANDLE_ERROR(cudaGraphicsGLRegisterBuffer(&data.resource, pbo, cudaGraphicsMapFlagsWriteDiscard));
-
 
 	// Host Alloc
 	float* outSrc;
 	HANDLE_ERROR(cudaMallocHost((void**)&outSrc, N * sizeof(float)));
 
 	init_anim(&data, N);
-	
+
 	// Fill heater
 	initConstantRegion(&data, MIN_TEMP, MAX_TEMP, DIM, 256, 256, 20);
 
-
 	// Main loop
 	while (!glfwWindowShouldClose(window)) {
-
 		glClear(GL_COLOR_BUFFER_BIT);
+
+
+		animate(&data, threadsPerBlock, blocksPerGrid, SPEED, DIM);
+
+		// Bind the PBO as a texture
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, DIM, DIM, 0, GL_RED, GL_FLOAT, nullptr);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+		// Bind the VAO
+		glBindVertexArray(VAO);
+
+		// OpenGL rendering
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		glBindVertexArray(0);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-	
-		
-		animate(&data, outSrc, threadsPerBlock, blocksPerGrid, SPEED, DIM);
 	}
 
 	// Free memory

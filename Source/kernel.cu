@@ -1,4 +1,4 @@
-#include "kernel.cuh" // TODO: change NAME
+#include "Kernel.cuh" // TODO: change NAME
 
 
 // Select CUDA device
@@ -112,7 +112,7 @@ __global__ void update_anim_kernel(float* dev_inSrc, float* dev_outSrc, float SP
 
 
 // Animate function
-__host__ void animate(DataBlock* data, float* outSrc, dim3 threads, dim3 blocks, float SPEED, int DIM) {
+__host__ void animate(DataBlock* data, dim3 threads, dim3 blocks, float SPEED, int DIM) {
     bool wayOut = true;
     HANDLE_ERROR(cudaEventRecord(data->start, 0));
 
@@ -120,25 +120,24 @@ __host__ void animate(DataBlock* data, float* outSrc, dim3 threads, dim3 blocks,
 	HANDLE_ERROR(cudaGraphicsMapResources(1, &data->resource, 0));
 
 	// 2. Get CUDA device pointer
-	cudaArray* cuArray;
-	HANDLE_ERROR(cudaGraphicsSubResourceGetMappedArray(&cuArray, data->resource, 0, 0));
+    float* devPtr;
+	size_t size;
+	HANDLE_ERROR(cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, data->resource));
 
+	for (int i = 0; i < 30; i++) {
+		float* in = wayOut ? data->dev_inSrc : data->dev_outSrc;
+		float* out = wayOut ? data->dev_outSrc : data->dev_inSrc;
 
-    for (int i = 0; i < 30; i++) {
-        float* in = wayOut ? data->dev_inSrc : data->dev_outSrc;
-        float* out = wayOut ? data->dev_outSrc : data->dev_inSrc;
-
-
-        copy_heaters_kernel<<<blocks, threads>>>(in, data->dev_constSrc, DIM);
+		copy_heaters_kernel<<<blocks, threads>>>(in, data->dev_constSrc, DIM);
 		cudaDeviceSynchronize(); // TODO check if needed
-        update_anim_kernel<<<blocks, threads>>>(in, out, SPEED, DIM);
+		update_anim_kernel<<<blocks, threads>>>(in, out, SPEED, DIM);
 
-        wayOut = !wayOut;
-    }
+		wayOut = !wayOut;
+	}
 
-	// 3. Copy final output to host
+	// 3. Copy final output to PBO
 	float* finalOut = wayOut ? data->dev_outSrc : data->dev_inSrc;
-	HANDLE_ERROR(cudaMemcpy(outSrc, finalOut, DIM * DIM * sizeof(float), cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(devPtr, finalOut, DIM * DIM * sizeof(float), cudaMemcpyDeviceToDevice));
 
 	// 4. Unmap the OpenGL resource After kernel execution
 	HANDLE_ERROR(cudaGraphicsUnmapResources(1, &data->resource, 0));
