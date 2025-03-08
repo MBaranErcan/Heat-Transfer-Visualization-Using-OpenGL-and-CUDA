@@ -1,4 +1,4 @@
-#include "Kernel.cuh" // TODO: change NAME
+#include "Kernel.cuh"
 
 
 // Select CUDA device
@@ -86,7 +86,7 @@ __global__ void copy_heaters_kernel(float* iptr, const float* cptr, int DIM) {
     int y = threadIdx.y + blockIdx.y * blockDim.y;
     int offset = x + y * DIM;
 
-    if (x < DIM && y < DIM && cptr[offset] != 0) { // Check boundaries too TODO
+    if (x < DIM && y < DIM && cptr[offset] != 0) {
 		iptr[offset] = cptr[offset];
 	}
 }
@@ -116,30 +116,26 @@ __host__ void animate(DataBlock* data, dim3 threads, dim3 blocks, float SPEED, i
     bool wayOut = true;
     HANDLE_ERROR(cudaEventRecord(data->start, 0));
 
-	// 1. Map the OpenGL resource before launching kernels
-	HANDLE_ERROR(cudaGraphicsMapResources(1, &data->resource, 0));
-
-	// 2. Get CUDA device pointer
-    float* devPtr;
-	size_t size;
-	HANDLE_ERROR(cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, data->resource));
-
+    
 	for (int i = 0; i < 30; i++) {
 		float* in = wayOut ? data->dev_inSrc : data->dev_outSrc;
 		float* out = wayOut ? data->dev_outSrc : data->dev_inSrc;
 
 		copy_heaters_kernel<<<blocks, threads>>>(in, data->dev_constSrc, DIM);
-		cudaDeviceSynchronize(); // TODO check if needed
 		update_anim_kernel<<<blocks, threads>>>(in, out, SPEED, DIM);
 
 		wayOut = !wayOut;
 	}
 
-	// 3. Copy final output to PBO
 	float* finalOut = wayOut ? data->dev_outSrc : data->dev_inSrc;
-	HANDLE_ERROR(cudaMemcpy(devPtr, finalOut, DIM * DIM * sizeof(float), cudaMemcpyDeviceToDevice));
 
-	// 4. Unmap the OpenGL resource After kernel execution
+	HANDLE_ERROR(cudaGraphicsMapResources(1, &data->resource, 0));
+
+	cudaArray_t cudaArray;
+	HANDLE_ERROR(cudaGraphicsSubResourceGetMappedArray(&cudaArray, data->resource, 0, 0));
+
+	HANDLE_ERROR(cudaMemcpyToArray(cudaArray, 0, 0, finalOut, DIM * DIM * sizeof(float), cudaMemcpyDeviceToDevice));
+
 	HANDLE_ERROR(cudaGraphicsUnmapResources(1, &data->resource, 0));
 }
 

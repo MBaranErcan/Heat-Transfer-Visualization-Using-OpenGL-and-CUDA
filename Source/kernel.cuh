@@ -1,14 +1,14 @@
 #pragma once
 
+#include <iostream>
+#include <windows.h>
+#include <cassert>
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include <windows.h>
 #include <cuda_gl_interop.h>
 
-
-#include <cassert>
-#include <iostream>
 
 #include "handle_error.h"
 
@@ -19,7 +19,9 @@ struct DataBlock {
 	float* dev_outSrc;
 	float* dev_constSrc;
 
-	cudaGraphicsResource_t resource;
+	cudaArray* cudaArray;			// For texture binding
+	cudaGraphicsResource_t resource;// OpenGL-CUDA interop resource
+	GLuint textureID;				// OpenGL texture ID
 
 	cudaEvent_t start, stop;
 	float totalTime;

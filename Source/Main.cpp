@@ -63,20 +63,20 @@ int main()
 	shader.use();
 	shader.setInt("heatmap", 0); // Set the texture uniform
 
+	DataBlock data;
+
 	// Create quad
 	unsigned int VAO, VBO, EBO;
 	createQuad(&VAO, &VBO, &EBO);
 
-	// Create OpenGL PBO
-	GLuint pbo;
-	createPBO(&pbo, DIM);
+	// Create texture in DataBlock
+	createTexture(&data.textureID, DIM, DIM);
+
+	// Register OpenGL texture with CUDA
+	HANDLE_ERROR(cudaGraphicsGLRegisterImage(&data.resource, data.textureID, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard));
 
 	// Select CUDA device
 	selectDevice(0);
-
-	// Register PBO with CUDA
-	DataBlock data;
-	HANDLE_ERROR(cudaGraphicsGLRegisterBuffer(&data.resource, pbo, cudaGraphicsMapFlagsWriteDiscard));
 
 	// Host Alloc
 	float* outSrc;
@@ -90,22 +90,11 @@ int main()
 	// Main loop
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
-
-
 		animate(&data, threadsPerBlock, blocksPerGrid, SPEED, DIM);
-
-		// Bind the PBO as a texture
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, DIM, DIM, 0, GL_RED, GL_FLOAT, nullptr);
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-
-		// Bind the VAO
+		
+		glBindTexture(GL_TEXTURE_2D, data.textureID);
 		glBindVertexArray(VAO);
-
-		// OpenGL rendering
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
