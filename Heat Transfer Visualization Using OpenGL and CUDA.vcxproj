@@ -95,6 +95,7 @@
     <CudaCompile Include="Source\Kernel.cu" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="Shaders\Shader.frag" />
     <None Include="Shaders\Shader.vert" />
   </ItemGroup>

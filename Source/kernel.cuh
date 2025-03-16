@@ -22,7 +22,7 @@ struct DataBlock {
 
 	cudaArray_t cudaArray;
 	cudaGraphicsResource_t resource;// OpenGL-CUDA interop resource
-	GLuint textureID;				// OpenGL texture ID TODO: not needed
+	GLuint textureID;				// OpenGL texture ID
 
 	cudaEvent_t start, stop;
 	float totalTime;
@@ -31,7 +31,6 @@ struct DataBlock {
 	float frames;
 };
 
-// TODO add implementation maybe, for both cold and hot regions
 struct Heater {
 	float temp;
 	int x, y;
