@@ -10,9 +10,14 @@
 #include "Graphics.h"
 #include "Shader.h"
 #include "handle_error.h"
+#include <chrono>
 
 int imin(int a, int b) {
 	return (a < b ? a : b);
+}
+
+int imax(int a, int b) {
+	return (a > b ? a : b);
 }
 
 int main()
@@ -20,9 +25,10 @@ int main()
 	const float PI = 3.1415f;
 	const int DIM = 512;
 	const int N = (DIM * DIM);
-	const float SPEED = 0.25f;
+	const float SPEED = 1.0f; // Should be between 0.0 and 1.0
 	const float MAX_TEMP = 1.0f;
-	const float MIN_TEMP = 0.0001f;
+	const float MIN_TEMP = 0.000001f;
+	const float GRID_TEMP = (MAX_TEMP + MIN_TEMP) / 2;
 
 	dim3 threadsPerBlock(16, 16);
 	dim3 blocksPerGrid((DIM + 15) / 16, (DIM + 15) / 16);
@@ -61,7 +67,7 @@ int main()
 	// Create shader program
 	Shader shader("Shaders/Shader.vert", "Shaders/Shader.frag");
 	shader.use();
-	shader.setInt("heatmap", 0); // Set the texture uniform
+	shader.setInt("heatmap", 0);
 
 	DataBlock data;
 
@@ -82,15 +88,39 @@ int main()
 	float* outSrc;
 	HANDLE_ERROR(cudaMallocHost((void**)&outSrc, N * sizeof(float)));
 
-	init_anim(&data, N);
+	// Default temp for grid
+	init_anim(&data, DIM, GRID_TEMP, blocksPerGrid, threadsPerBlock);
 
-	// Fill heater
-	initConstantRegion(&data, MIN_TEMP, MAX_TEMP, DIM, 256, 256, 20);
+	// Heater 1
+	Heater heater1;
+	heater1.temp = 1.0f;
+	heater1.x =		128;
+	heater1.y =		256;
+	heater1.radius = 50;
+	add_heater(&data, &heater1, DIM, blocksPerGrid, threadsPerBlock);
+
+	//Heater 2 (Cooler)
+	Heater heater2;
+	heater2.temp = 0.0f;
+	heater2.x = 384;
+	heater2.y = 256;
+	heater2.radius = 50;
+	add_heater(&data, &heater2, DIM, blocksPerGrid, threadsPerBlock);
 
 	// Main loop
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
-		animate(&data, threadsPerBlock, blocksPerGrid, SPEED, DIM);
+		animate(&data, blocksPerGrid, threadsPerBlock, SPEED, DIM);
+
+		// Print FPS every second, i use the cudaEvent instead of chrono on purpose
+		if (data.elapsedTime >= 1000) {
+			float fps = data.frames / (data.elapsedTime / 1000.0f);
+			printf("Total Time Elapsed: %1.f seconds, FPS: %.1f\n", (data.totalTime/1000), fps);
+
+			// Reset timer and frame count
+			data.elapsedTime = 0.0f;
+			data.frames = 0;
+		}
 		
 		glBindTexture(GL_TEXTURE_2D, data.textureID);
 		glBindVertexArray(VAO);
